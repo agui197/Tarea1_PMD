@@ -80,3 +80,4 @@ void mergeArrays(Profesor P1[20],int n1,Profesor *P2,int n2,Profesor P3[40],int 
         }
     }
 }
+
