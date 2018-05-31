@@ -15,7 +15,7 @@ typedef struct{
 
 void readArray(Profesor *P,int n);
 void printArray(Profesor *P,int n);
-void mergeArrays(Profesor P1[20],int n1,Profesor *P2,int n2,Profesor P3[40],int n3);
+void mergeArrays(Profesor P1[20],int n1,Profesor *P2,int n2,Profesor P3[40],int n3);   //aqui el P1 esta como arreglo y P2 como apuntador eso fue porque intente la condicional del merge por los dos caminos, dejando todo como arrays y todo como apuntadores 
 
 
 int main(int argc, const char * argv[]) {
