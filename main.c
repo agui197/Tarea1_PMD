@@ -1,83 +1,93 @@
 //
 //  main.c
-//  PMD_tarea1_limpio
+//  tarea_2_PMD
 //
-//  Created by Mac User on 31/05/18.
+//  Created by Mac User on 10/06/18.
 //  Copyright © 2018 Mac User. All rights reserved.
 //
 
 #include <stdio.h>
-#include <string.h>
+#include <time.h>
+/* //secuencial
+int main(){
+    
+    clock_t start = clock();
+    long long n=50000000000;
+    long double x = 0.0;
+    long long i;
+    for(i=1;i<=n;i++){
+        if((i&1)==1)
+            x+=(long double)(1)/(long double)((2*i)-1);
+        else
+            x+=(long double)(-1)/(long double)((2*i)-1);
+    }
+    clock_t stop = clock();
+    int ms = 1000 * (stop - start)/CLOCKS_PER_SEC;
+    printf("Pi:     %.10Lf\n", 4*x);
+    printf("Tiempo: %d ms\n", ms);
+    return 0;
+}
+*/
+//parametrizada
+#include <stdlib.h>
+#include <pthread.h>
+
 typedef struct{
-    char nombre[15];
-    float calificacion;
-} Profesor;
+    long long inicio;
+    long long fin;
+    long double sumaParcial;
+}Rango;
 
-void readArray(Profesor *P,int n);
-void printArray(Profesor *P,int n);
-void mergeArrays(Profesor P1[20],int n1,Profesor *P2,int n2,Profesor P3[40],int n3);   //aqui el P1 esta como arreglo y P2 como apuntador eso fue porque intente la condicional del merge por los dos caminos, dejando todo como arrays y todo como apuntadores 
-
+long double serieGregory(Rango);
+void * suma(void *param);
 
 int main(int argc, const char * argv[]) {
-    Profesor arr1[20];
-    Profesor arr2[20];
-    Profesor arrF[40];
-    Profesor *d1=arr1,*d2=arr2,*d3=arrF;
-    int n1,n2;
-    scanf("%d", &n1);
-    readArray(d1,n1);
-    scanf("%d", &n2);
-    readArray(d2,n2);
-    mergeArrays(arr1,n1,d2,n2,arrF,n1+n2);
-    printArray(d3,n1+n2);
     
+    clock_t start = clock();
+    
+    int nHilos,i,j=0;
+    scanf("%d",&nHilos);
+    long long incremento=50000000000/nHilos;
+    Rango *rango =(Rango *)malloc(sizeof(Rango )*nHilos);
+    rango->inicio=1;
+    rango->fin=incremento;
+    rango->sumaParcial=0.0;
+    for(i=1;i<nHilos;i++){
+        (rango+i)->inicio=(rango+j)->inicio+(rango+j)->fin;
+        (rango+i)->fin=(rango+j)->fin+incremento;
+        (rango+i)->sumaParcial=0.0;
+        j+=1;
+    }
+    
+    pthread_t *r =(pthread_t *)malloc(sizeof(pthread_t )*nHilos);
+    for(i=0;i<nHilos;i++){
+        *(r+i)=NULL;
+        pthread_create(&r[i], NULL, suma, (void *) &rango[i]);
+        pthread_join(r[i] , NULL);
+    }
+    long double resultado;
+    for(i=0;i<nHilos;i++){
+        resultado+=4*((rango+i)->sumaParcial);
+    }
+    
+    clock_t stop = clock();
+    
+    int ms = 1000 * (stop - start)/CLOCKS_PER_SEC;
+    printf("Hilos:  %d\n", nHilos);
+    printf("Pi:     %.10Lf\n", resultado);
+    printf("Tiempo: %d ms\n", ms);
     
     return 0;
 }
-void readArray(Profesor *P,int n){
-    int i;
-    char temp;
-    float t;
-    for(i=0;i<n;i++){
-        scanf("%c",&temp);
-        scanf("%[^\n]",(P+i*5)->nombre);
-        scanf("%f",&t);
-        (P+i*5)->calificacion=t;
-    }
-}
-void printArray(Profesor *P,int n){
-    int i;
-    for(i=0;i<n;i++)
-        printf("%s  %f\n",(P+i*5)->nombre,(P+i*5)->calificacion);
-}
-void mergeArrays(Profesor P1[20],int n1,Profesor *P2,int n2,Profesor P3[40],int n3){
-    int i,j,cont,k;
-    for(i=0;i<n1;i++){
-        cont=i+1;
-        for(j=cont;j<n1;j++)
-            //c1=&P1.nombre;
-            //c1=(P1+i*5)->nombre;
-            //c2=(P1+j*5)->nombre;
-            if(strcmp(P1[i].nombre,P1[j].nombre)==0){
-                //(P3+i*5)->nombre=c1;
-                printf("equal\n");
-                strcpy(P1[i].nombre,P3[i].nombre);
-                break;
-            }
-            else{
-                printf("diferent\n");
-                strcpy(P1[i].nombre,P3[i].nombre);
-            }
-        for(k=0;k<n2;k++){
-            if(strcmp(P1[i].nombre,P2[k].nombre)==1){
-                strcpy(P1[i].nombre,P3[i].nombre);
-                break;
-            }
-            else{
-                printf("diferent\n");
-                strcpy(P1[i].nombre,P3[i].nombre);
-            }
-        }
-    }
-}
 
+void * suma(void *param){
+    Rango *r=(Rango*)param;
+    long long i;
+    for(i=r->inicio;i<=r->fin;i++){
+        if((i&1)==1)
+            r->sumaParcial+=(long double)(1)/(long double)((2*i)-1);
+        else
+            r->sumaParcial+=(long double)(-1)/(long double)((2*i)-1);
+    }
+    return NULL;
+}
